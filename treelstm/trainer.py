@@ -23,6 +23,7 @@ class Trainer(object):
         indices = torch.randperm(len(dataset), dtype=torch.long, device='cpu')
         for idx in tqdm(range(len(dataset)), desc='Training epoch ' + str(self.epoch + 1) + ''):
             ltree, linput, rtree, rinput, label = dataset[indices[idx]]
+            print(dataset.word_sentence(linput))
             target = utils.map_label_to_target(label, dataset.num_classes)
             linput, rinput = linput.to(self.device), rinput.to(self.device)
             target = target.to(self.device)

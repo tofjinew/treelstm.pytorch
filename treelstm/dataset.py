@@ -19,8 +19,8 @@ class SICKDataset(data.Dataset):
         self.lsentences = self.read_sentences(os.path.join(path, 'a.toks'))
         self.rsentences = self.read_sentences(os.path.join(path, 'b.toks'))
 
-        self.ltrees = self.read_trees(os.path.join(path, 'a.parents'))
-        self.rtrees = self.read_trees(os.path.join(path, 'b.parents'))
+        self.ltrees = self.read_trees(os.path.join(path, 'a.cparents'))
+        self.rtrees = self.read_trees(os.path.join(path, 'b.cparents'))
 
         self.labels = self.read_labels(os.path.join(path, 'sim.txt'))
 
@@ -45,6 +45,12 @@ class SICKDataset(data.Dataset):
     def read_sentence(self, line):
         indices = self.vocab.convertToIdx(line.split(), Constants.UNK_WORD)
         return torch.tensor(indices, dtype=torch.long, device='cpu')
+
+    def word_sentence(self, sent):
+        toks = []
+        for w in sent:
+            toks.append(self.vocab.idxToLabel[int(w)])
+        return toks
 
     def read_trees(self, filename):
         with open(filename, 'r') as f:
