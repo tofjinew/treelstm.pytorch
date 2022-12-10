@@ -81,25 +81,18 @@ def main():
 
     # load SICK dataset splits
     train_file = os.path.join(args.data, 'sick_train.pth')
-    if os.path.isfile(train_file):
-        train_dataset = torch.load(train_file)
-    else:
-        train_dataset = SICKDataset(train_dir, vocab, args.num_classes)
-        torch.save(train_dataset, train_file)
+    train_dataset = SICKDataset(train_dir, vocab, args.num_classes)
+    torch.save(train_dataset, train_file)
     logger.debug('==> Size of train data   : %d ' % len(train_dataset))
+
     dev_file = os.path.join(args.data, 'sick_dev.pth')
-    if os.path.isfile(dev_file):
-        dev_dataset = torch.load(dev_file)
-    else:
-        dev_dataset = SICKDataset(dev_dir, vocab, args.num_classes)
-        torch.save(dev_dataset, dev_file)
+    dev_dataset = SICKDataset(dev_dir, vocab, args.num_classes)
+    torch.save(dev_dataset, dev_file)
     logger.debug('==> Size of dev data     : %d ' % len(dev_dataset))
+
     test_file = os.path.join(args.data, 'sick_test.pth')
-    if os.path.isfile(test_file):
-        test_dataset = torch.load(test_file)
-    else:
-        test_dataset = SICKDataset(test_dir, vocab, args.num_classes)
-        torch.save(test_dataset, test_file)
+    test_dataset = SICKDataset(test_dir, vocab, args.num_classes)
+    torch.save(test_dataset, test_file)
     logger.debug('==> Size of test data    : %d ' % len(test_dataset))
 
     # initialize model, criterion/loss_function, optimizer
@@ -153,10 +146,10 @@ def main():
 
     best = -float('inf')
     for epoch in range(args.epochs):
-        dev_loss, dev_pred = trainer.train(dev_dataset)
-        # train_loss = trainer.train(train_dataset)
-        # train_loss, train_pred = trainer.test(train_dataset)
-        # test_loss, test_pred = trainer.test(test_dataset)
+        train_loss = trainer.train(train_dataset)
+        train_loss, train_pred = trainer.test(train_dataset)
+        dev_loss, dev_pred = trainer.test(dev_dataset)
+        test_loss, test_pred = trainer.test(test_dataset)
 
         train_pearson = metrics.pearson(train_pred, train_dataset.labels)
         train_mse = metrics.mse(train_pred, train_dataset.labels)

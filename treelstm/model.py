@@ -4,48 +4,6 @@ import torch.nn as nn
 from . import Constants
 
 
-# module forConstituencyTreeLSTM
-# class ConstituencyTreeLSTM(nn.Module):
-#     def __init__(self, in_dim, mem_dim):
-#         super(ConstituencyTreeLSTM, self).__init__()
-#         self.in_dim = in_dim
-#         self.mem_dim = mem_dim
-#         self.ioux = nn.Linear(self.in_dim, 3 * self.mem_dim)
-#         # self.iouh = nn.Linear(self.mem_dim, 3 * self.mem_dim)
-#         self.iouhL = nn.Linear(self.mem_dim, 3 * self.mem_dim)
-#         self.iouhR = nn.Linear(self.mem_dim, 3 * self.mem_dim)
-#         self.fx = nn.Linear(self.in_dim, self.mem_dim)
-#         self.fhL = nn.Linear(self.mem_dim, self.mem_dim)
-#         self.fhR = nn.Linear(self.mem_dim, self.mem_dim)
-        
-    # def node_forward(self, inputs, child_c, child_h):
-    #     print(torch.sum(child_h,dim=0,keepDim=True))
-        
-        
-    #     iou = self.ioux(inputs) + self.iouhL(child_hl) + self.iouhR(child_hr)
-
-    #     i, o, u = torch.split(iou, iou.size(1) // 3, dim=1)
-    #     i, o, u = torch.sigmoid(i), torch.sigmoid(o), torch.tanh(u)
-
-
-    #     fL = torch.sigmoid(
-    #         self.fhL(child_hl) +
-    #         self.fx(inputs)
-    #     )
-
-    #     fR = torch.sigmoid(
-    #         self.fhR(child_hr) +
-    #         self.fx(inputs)
-    #     )
-
-    #     fcL = torch.mul(fL, child_c)
-    #     fcR = torch.mul(fR, child_c)
-
-    #     c = torch.mul(i, u) + fcL + fcR
-    #     h = torch.mul(o, torch.tanh(c))
-    #     return c, h
-
-    # old child-sum tree, didn't change name cause lazy - daniel
 class ConstituencyTreeLSTM(nn.Module):
     def __init__(self, in_dim, mem_dim):
         super(ConstituencyTreeLSTM, self).__init__()
@@ -78,8 +36,7 @@ class ConstituencyTreeLSTM(nn.Module):
         h = torch.mul(o, torch.tanh(c))
         return c, h
 
-    def node_forward(self, inputs, children):
-        print(children)
+    def node_forward(self, children):
         if len(children) == 2: 
             childL_c = children[0][0]
             childL_h = children[0][1]
@@ -87,20 +44,18 @@ class ConstituencyTreeLSTM(nn.Module):
             childR_c = children[1][0]
             childR_h = children[1][1]
             
-            iou = self.ioux(inputs) + self.iouhL(childL_h) + self.iouhR(childR_h)
+            iou = self.iouhL(childL_h) + self.iouhR(childR_h)
 
             i, o, u = torch.split(iou, iou.size(1) // 3, dim=1)
             i, o, u = torch.sigmoid(i), torch.sigmoid(o), torch.tanh(u)
 
 
             fL = torch.sigmoid(
-                self.fhL(childL_h) +
-                self.fx(inputs)
+                self.fhL(childL_h)
             )
 
             fR = torch.sigmoid(
-                self.fhR(childR_h) +
-                self.fx(inputs)
+                self.fhR(childR_h)
             )
 
             fcL = torch.mul(fL, childL_c)
@@ -113,15 +68,14 @@ class ConstituencyTreeLSTM(nn.Module):
             childL_c = children[0][0]
             childL_h = children[0][1]
             
-            iou = self.ioux(inputs) + self.iouhL(childL_h)
+            iou = self.iouhL(childL_h)
 
             i, o, u = torch.split(iou, iou.size(1) // 3, dim=1)
             i, o, u = torch.sigmoid(i), torch.sigmoid(o), torch.tanh(u)
 
 
             fL = torch.sigmoid(
-                self.fhL(childL_h) +
-                self.fx(inputs)
+                self.fhL(childL_h)
             )
 
 
@@ -135,11 +89,11 @@ class ConstituencyTreeLSTM(nn.Module):
 
 
     def forward(self, tree, inputs):   
-        print("TREE SIZE:", tree.size())
-        print("TREE INDEX:", tree.idx)
-        print("NUM CHILDREN:", tree.num_children) 
-        for child in tree.children:
-            print("CHILD INDEX:", child.idx)
+        # print("TREE SIZE:", tree.size())
+        # print("TREE INDEX:", tree.idx)
+        # print("NUM CHILDREN:", tree.num_children) 
+        # for child in tree.children:
+        #     print("CHILD INDEX:", child.idx)
         assert(tree.num_children <= 2)
 
         for idx in range(tree.num_children):
@@ -154,7 +108,7 @@ class ConstituencyTreeLSTM(nn.Module):
             # list of individual child (c,h)
             children =  list(map(lambda x: x.state, tree.children))
             # child_c, child_h = torch.cat(child_c, dim=0), torch.cat(child_h, dim=0)
-            tree.state = self.node_forward(inputs[tree.idx], children)
+            tree.state = self.node_forward(children)
         # print('INDEX: ', tree.idx)
         # print('STATE: ', tree.state)
         return tree.state
